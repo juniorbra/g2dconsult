@@ -5,14 +5,24 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "8080:80"
-    restart: unless-stopped
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
     networks:
-      - app-network
+      - portainer
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.g2dconsult.rule=Host(`g2d.zobot.top`)
+        - traefik.http.routers.g2dconsult.entrypoints=websecure
+        - traefik.http.routers.g2dconsult.tls.certresolver=letsencryptresolver
+        - traefik.http.services.g2dconsult.loadbalancer.server.port=80
+        - traefik.http.services.g2dconsult.loadbalancer.passHostHeader=true
+        - traefik.http.routers.g2dconsult.service=g2dconsult
 
 networks:
-  app-network:
-    driver: bridge
+  portainer:
+    external: true
+    name: portainer
